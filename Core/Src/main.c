@@ -109,7 +109,8 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  printf("Robotic Football Tackle Sensor\r\n");
+  printf("Firmware v0.0.0\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -374,7 +375,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+int __io_putchar(int ch)
+{
+	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+	return ch;
+}
 /* USER CODE END 4 */
 
 /**
