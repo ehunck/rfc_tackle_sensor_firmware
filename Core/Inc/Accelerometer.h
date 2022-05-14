@@ -16,11 +16,20 @@ typedef struct
 	int16_t x;
 	int16_t y;
 	int16_t z;
+} Accelerometer_RawData;
+
+typedef struct
+{
+	float x;
+	float y;
+	float z;
 } Accelerometer_Data;
 
-void Accelerometer_Init();
+bool Accelerometer_Init();
 void Accelerometer_Update();
+
 bool Accelerometer_GetData( Accelerometer_Data *data );
+bool Accelerometer_GetRawData( Accelerometer_RawData *data );
 
 
 #endif /* INC_ACCELEROMETER_H_ */
