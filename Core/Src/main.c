@@ -111,16 +111,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  Accelerometer_RawData data = {0};
+  Accelerometer_Data data = {0};
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  Accelerometer_Update();
-	  Accelerometer_GetRawData( &data );
-	  printf( "%d,%d,%d\r\n", data.x, data.y, data.z );
-	  HAL_Delay(100);
+	  Accelerometer_GetData( &data );
+	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
+	  HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
@@ -200,7 +200,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

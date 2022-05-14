@@ -18,8 +18,10 @@ int32_t SPIWriteInterface(void *handle, uint8_t reg, const uint8_t *buf, uint16_
 {
 	reg |= 0x40;
 	HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(handle, &reg, 1, 1000);
-	HAL_SPI_Transmit(handle, (uint8_t*) buf, len, 1000);
+	HAL_Delay(1);
+	HAL_SPI_Transmit(handle, &reg, 1, HAL_MAX_DELAY);
+	HAL_SPI_Transmit(handle, (uint8_t*) buf, len, HAL_MAX_DELAY);
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
 	return 0;
 }
@@ -28,8 +30,10 @@ int32_t SPIReadInterface(void *handle, uint8_t reg, uint8_t *buf, uint16_t len)
 {
 	reg |= 0xC0;
 	HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(handle, &reg, 1, 1000);
-	HAL_SPI_Receive(handle, buf, len, 1000);
+	HAL_Delay(1);
+	HAL_SPI_Transmit(handle, &reg, 1, HAL_MAX_DELAY);
+	HAL_SPI_Receive(handle, buf, len, HAL_MAX_DELAY);
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
 	return 0;
 }
@@ -61,7 +65,7 @@ bool Accelerometer_Init()
 	/* Enable Block Data Update */
 	lis2de12_block_data_update_set(&spi_interface, PROPERTY_ENABLE);
 	/* Set Output Data Rate to 1Hz */
-	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_1Hz);
+	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_10Hz);
 	/* Set full scale to 2g */
 	lis2de12_full_scale_set(&spi_interface, LIS2DE12_2g);
 	/* Enable temperature sensor */
