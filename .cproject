@@ -81,13 +81,13 @@
                                     									
                                     <listOptionValue builtIn="false" value="../Core/Inc"/>
                                     									
+                                    <listOptionValue builtIn="false" value="../Drivers/lis2de12"/>
+                                    									
                                     <listOptionValue builtIn="false" value="../Drivers/STM32G0xx_HAL_Driver/Inc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32G0xx/Include"/>
                                     									
                                     <listOptionValue builtIn="false" value="../Drivers/STM32G0xx_HAL_Driver/Inc/Legacy"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="../Drivers/lis2de12"/>
                                     								
                                 </option>
                                 								
