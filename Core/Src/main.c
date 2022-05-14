@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lis2de12_reg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,7 +60,17 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+//typedef int32_t (*stmdev_write_ptr)(void *, uint8_t, const uint8_t *, uint16_t);
+//typedef int32_t (*stmdev_read_ptr)(void *, uint8_t, uint8_t *, uint16_t);
+//
+//typedef struct
+//{
+//  /** Component mandatory fields **/
+//  stmdev_write_ptr  write_reg;
+//  stmdev_read_ptr   read_reg;
+//  /** Customizable optional pointer **/
+//  void *handle;
+//} stmdev_ctx_t;
 /* USER CODE END 0 */
 
 /**
