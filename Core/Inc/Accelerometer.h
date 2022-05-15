@@ -31,5 +31,6 @@ void Accelerometer_Update();
 bool Accelerometer_GetData( Accelerometer_Data *data );
 bool Accelerometer_GetRawData( Accelerometer_RawData *data );
 
+float Accelerometer_GetMagnitude();
 
 #endif /* INC_ACCELEROMETER_H_ */

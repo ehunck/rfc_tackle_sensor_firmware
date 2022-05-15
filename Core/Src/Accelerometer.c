@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "Accelerometer.h"
 #include "lis2de12_reg.h"
+#include <math.h>
 
 extern SPI_HandleTypeDef hspi1;
 
@@ -130,4 +131,11 @@ bool Accelerometer_GetRawData( Accelerometer_RawData *data )
 		return true;
 	}
 	return false;
+}
+
+float Accelerometer_GetMagnitude()
+{
+	float sq = acceleration_mg[0]*acceleration_mg[0] + acceleration_mg[1]*acceleration_mg[1] + acceleration_mg[2]*acceleration_mg[2];
+	float mag = sqrtf(sq);
+	return mag;
 }

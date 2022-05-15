@@ -19,7 +19,7 @@ uint16_t ScaleRGBToPulse(uint8_t val)
 	// Assumes the value coming in is 0 for 0% or 255 for 100%
 	// Pulse spans 0 for 0% and 1000 for 100%
 	uint32_t temp = val*1000;
-	return (uint16_t) (temp/256);
+	return (uint16_t) (temp/255);
 }
 
 void RGBLed_Init()

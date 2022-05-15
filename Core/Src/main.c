@@ -107,6 +107,23 @@ int main(void)
   {
 	  printf("Failed to initialize accelerometer.\r\n");
   }
+
+  RGBLed_SetRed();
+  HAL_Delay(1000);
+  RGBLed_SetGreen();
+  HAL_Delay(1000);
+  RGBLed_SetBlue();
+  HAL_Delay(1000);
+  RGBLed_SetYellow();
+  HAL_Delay(1000);
+  RGBLed_SetCyan();
+  HAL_Delay(1000);
+  RGBLed_SetMagenta();
+  HAL_Delay(1000);
+  RGBLed_SetWhite();
+  HAL_Delay(1000);
+  RGBLed_SetOff();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,7 +136,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  Accelerometer_Update();
 	  Accelerometer_GetData( &data );
-	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
+	  float mag = Accelerometer_GetMagnitude();
+	  printf( "%d,%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z, (int)mag );
 	  HAL_Delay(10);
   }
   /* USER CODE END 3 */
@@ -200,7 +218,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -239,7 +257,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 640;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 10000;
+  htim1.Init.Period = 1000;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
