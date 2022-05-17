@@ -68,7 +68,7 @@ bool Accelerometer_Init()
 	/* Set Output Data Rate to 1Hz */
 	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_10Hz);
 	/* Set full scale to 2g */
-	lis2de12_full_scale_set(&spi_interface, LIS2DE12_2g);
+	lis2de12_full_scale_set(&spi_interface, LIS2DE12_4g);
 	/* Enable temperature sensor */
 	lis2de12_temperature_meas_set(&spi_interface, LIS2DE12_TEMP_ENABLE);
 
@@ -87,11 +87,11 @@ void Accelerometer_Update()
 		memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
 		lis2de12_acceleration_raw_get(&spi_interface, data_raw_acceleration);
 		acceleration_mg[0] =
-		lis2de12_from_fs2_to_mg(data_raw_acceleration[0]);
+				lis2de12_from_fs4_to_mg(data_raw_acceleration[0]);
 		acceleration_mg[1] =
-		lis2de12_from_fs2_to_mg(data_raw_acceleration[1]);
+				lis2de12_from_fs4_to_mg(data_raw_acceleration[1]);
 		acceleration_mg[2] =
-		lis2de12_from_fs2_to_mg(data_raw_acceleration[2]);
+				lis2de12_from_fs4_to_mg(data_raw_acceleration[2]);
 	}
 
 	lis2de12_temp_data_ready_get(&spi_interface, &reg.byte);

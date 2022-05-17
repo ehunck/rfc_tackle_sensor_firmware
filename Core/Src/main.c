@@ -27,6 +27,7 @@
 #include "lis2de12_reg.h"
 #include "RGBLed.h"
 #include "Accelerometer.h"
+#include "UserTimer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,7 +52,7 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+UserTimer ctx;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,21 +109,8 @@ int main(void)
 	  printf("Failed to initialize accelerometer.\r\n");
   }
 
-  RGBLed_SetRed();
-  HAL_Delay(1000);
-  RGBLed_SetGreen();
-  HAL_Delay(1000);
-  RGBLed_SetBlue();
-  HAL_Delay(1000);
-  RGBLed_SetYellow();
-  HAL_Delay(1000);
-  RGBLed_SetCyan();
-  HAL_Delay(1000);
-  RGBLed_SetMagenta();
-  HAL_Delay(1000);
-  RGBLed_SetWhite();
-  HAL_Delay(1000);
-  RGBLed_SetOff();
+  RGBLed_Init();
+  UserTimer_Init(&ctx, 5000);
 
   /* USER CODE END 2 */
 
@@ -139,6 +127,32 @@ int main(void)
 	  float mag = Accelerometer_GetMagnitude();
 	  printf( "%d,%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z, (int)mag );
 	  HAL_Delay(10);
+	  if( mag > 3000 )
+	  {
+		  UserTimer_Start(&ctx);
+	  }
+
+	  bool is_tackled = UserTimer_GetActive(&ctx);
+
+	  if(HAL_GPIO_ReadPin(MODE_SELECT_GPIO_Port, MODE_SELECT_Pin) == GPIO_PIN_SET)
+	  {
+		  RGBLed_SetBlue();
+		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
+	  }
+	  else
+	  {
+		  if( is_tackled )
+		  {
+			  RGBLed_SetRed();
+			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
+		  }
+		  else
+		  {
+			  RGBLed_SetGreen();
+			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
+		  }
+	  }
+
   }
   /* USER CODE END 3 */
 }
@@ -366,17 +380,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, TACKLE_STATUS_Pin|MODE_SELECT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : TACKLE_STATUS_Pin MODE_SELECT_Pin */
-  GPIO_InitStruct.Pin = TACKLE_STATUS_Pin|MODE_SELECT_Pin;
+  /*Configure GPIO pin : TACKLE_STATUS_Pin */
+  GPIO_InitStruct.Pin = TACKLE_STATUS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(TACKLE_STATUS_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : MODE_SELECT_Pin */
+  GPIO_InitStruct.Pin = MODE_SELECT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(MODE_SELECT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ACC_INT1_Pin ACC_INT2_Pin */
   GPIO_InitStruct.Pin = ACC_INT1_Pin|ACC_INT2_Pin;
