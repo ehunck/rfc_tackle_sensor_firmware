@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <stdlib.h>
 #include "lis2de12_reg.h"
 #include "RGBLed.h"
 #include "Accelerometer.h"
@@ -37,6 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define TACKLE_THRESHOLD 1000.0f
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -124,10 +126,10 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  Accelerometer_Update();
 	  Accelerometer_GetData( &data );
-	  float mag = Accelerometer_GetMagnitude();
-	  printf( "%d,%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z, (int)mag );
-	  HAL_Delay(10);
-	  if( mag > 3000 )
+	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
+	  HAL_Delay(1);
+	  if( fabsf(data.x) > TACKLE_THRESHOLD
+		  || fabsf(data.y) > TACKLE_THRESHOLD )
 	  {
 		  UserTimer_Start(&ctx);
 	  }
@@ -137,19 +139,19 @@ int main(void)
 	  if(HAL_GPIO_ReadPin(MODE_SELECT_GPIO_Port, MODE_SELECT_Pin) == GPIO_PIN_SET)
 	  {
 		  RGBLed_SetBlue();
-		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 	  }
 	  else
 	  {
 		  if( is_tackled )
 		  {
 			  RGBLed_SetRed();
-			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
+			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 		  }
 		  else
 		  {
 			  RGBLed_SetGreen();
-			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
+			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 		  }
 	  }
 
