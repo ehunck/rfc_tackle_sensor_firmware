@@ -66,9 +66,9 @@ bool Accelerometer_Init()
 	/* Enable Block Data Update */
 	lis2de12_block_data_update_set(&spi_interface, PROPERTY_ENABLE);
 	/* Set Output Data Rate to 1Hz */
-	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_10Hz);
+	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_200Hz);
 	/* Set full scale to 2g */
-	lis2de12_full_scale_set(&spi_interface, LIS2DE12_4g);
+	lis2de12_full_scale_set(&spi_interface, LIS2DE12_8g);
 	/* Enable temperature sensor */
 	lis2de12_temperature_meas_set(&spi_interface, LIS2DE12_TEMP_ENABLE);
 

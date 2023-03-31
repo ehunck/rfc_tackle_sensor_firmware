@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TACKLE_THRESHOLD 1000.0f
+#define TACKLE_THRESHOLD 1450.0f // mg
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,6 +47,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+IWDG_HandleTypeDef hiwdg;
+
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim1;
@@ -62,6 +64,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_IWDG_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -102,6 +105,7 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
+  MX_IWDG_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   printf("Robotic Football Tackle Sensor\r\n");
@@ -112,7 +116,7 @@ int main(void)
   }
 
   RGBLed_Init();
-  UserTimer_Init(&ctx, 5000);
+  UserTimer_Init(&ctx, 2000);
 
   /* USER CODE END 2 */
 
@@ -124,10 +128,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  HAL_IWDG_Refresh(&hiwdg);
 	  Accelerometer_Update();
 	  Accelerometer_GetData( &data );
 	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
-	  HAL_Delay(1);
 	  if( fabsf(data.x) > TACKLE_THRESHOLD
 		  || fabsf(data.y) > TACKLE_THRESHOLD )
 	  {
@@ -136,7 +140,7 @@ int main(void)
 
 	  bool is_tackled = UserTimer_GetActive(&ctx);
 
-	  if(HAL_GPIO_ReadPin(MODE_SELECT_GPIO_Port, MODE_SELECT_Pin) == GPIO_PIN_SET)
+	  if(HAL_GPIO_ReadPin(MODE_SELECT_GPIO_Port, MODE_SELECT_Pin) == GPIO_PIN_RESET)
 	  {
 		  RGBLed_SetBlue();
 		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
@@ -174,10 +178,11 @@ void SystemClock_Config(void)
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
@@ -209,6 +214,35 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
+
 }
 
 /**
