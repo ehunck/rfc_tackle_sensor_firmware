@@ -1,11 +1,5 @@
 # Collegiate Robotic Football Tackle Sensor Firmware
 
-## Release Notes
-
-| Version | Link to Download Binary | Date | Comments |
-| ------- | ----------------------- | ---- | -------- |
-| v0.0.0  | [v0.0.0](Releases/v0.0.0/rfc_tackle_sensor_v0.0.0.bin) | 03/30/2023 | Initial firmware release. 200 Hz sampling frequency, 8g max acceleration, 1.450g trigger threshold. |
-
 ## Cloning the Repo
 
 Open a git bash terminal in the directory of your choosing and call the following command:
