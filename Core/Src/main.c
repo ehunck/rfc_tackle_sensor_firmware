@@ -29,6 +29,9 @@
 #include "RGBLed.h"
 #include "Accelerometer.h"
 #include "UserTimer.h"
+#include "SerialCommands.h"
+#include <string.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,14 +57,21 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
-UserTimer ctx;
+UserTimer timer_ctx = {0};
+SerialCommands command_ctx = {0};
+uint8_t rx_buff[1] = {0};
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_IWDG_Init(void);
@@ -72,7 +82,14 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void SetRGBValue(const char* msg, uint32_t msg_len);
+#define NUM_COMMANDS	1
+const Command commands[NUM_COMMANDS] = {
+    {
+        .command_str = "rgb:",
+        .command_func = SetRGBValue
+    }
+};
 /* USER CODE END 0 */
 
 /**
@@ -103,20 +120,22 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
-  MX_IWDG_Init();
+//  MX_IWDG_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   printf("Robotic Football Tackle Sensor\r\n");
   printf("Firmware v0.0.0\r\n");
-  if( !Accelerometer_Init() )
-  {
-	  printf("Failed to initialize accelerometer.\r\n");
-  }
+//  if( !Accelerometer_Init() )
+//  {
+//	  printf("Failed to initialize accelerometer.\r\n");
+//  }
 
   RGBLed_Init();
-  UserTimer_Init(&ctx, 2000);
+  UserTimer_Init(&timer_ctx, 2000);
+  SerialCommands_Init(&command_ctx, commands, NUM_COMMANDS, "\n");
 
   /* USER CODE END 2 */
 
@@ -128,37 +147,38 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_IWDG_Refresh(&hiwdg);
-	  Accelerometer_Update();
-	  Accelerometer_GetData( &data );
-	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
+//	  HAL_IWDG_Refresh(&hiwdg);
+//	  Accelerometer_Update();
+//	  Accelerometer_GetData( &data );
+//	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
 	  if( fabsf(data.x) > TACKLE_THRESHOLD
 		  || fabsf(data.y) > TACKLE_THRESHOLD )
 	  {
-		  UserTimer_Start(&ctx);
+		  UserTimer_Start(&timer_ctx);
 	  }
 
-	  bool is_tackled = UserTimer_GetActive(&ctx);
+	  bool is_tackled = UserTimer_GetActive(&timer_ctx);
 
 	  if(HAL_GPIO_ReadPin(MODE_SELECT_GPIO_Port, MODE_SELECT_Pin) == GPIO_PIN_RESET)
 	  {
-		  RGBLed_SetBlue();
+//		  RGBLed_SetBlue();
 		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 	  }
 	  else
 	  {
 		  if( is_tackled )
 		  {
-			  RGBLed_SetRed();
+//			  RGBLed_SetRed();
 			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 		  }
 		  else
 		  {
-			  RGBLed_SetGreen();
+//			  RGBLed_SetGreen();
 			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 		  }
 	  }
-
+	  // Process serial commands from main context
+	  SerialCommands_Process(&command_ctx);
   }
   /* USER CODE END 3 */
 }
@@ -396,8 +416,27 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-
+  HAL_UART_Receive_IT(&huart2, rx_buff, 1);
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
 }
 
@@ -454,6 +493,24 @@ int __io_putchar(int ch)
 {
 	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
 	return ch;
+}
+
+// Parses Message received in the format <red>,<green>,<blue>
+void SetRGBValue(const char* msg, uint32_t msg_len)
+{
+	int r, g, b = 0;
+	int count = sscanf(msg, "%d,%d,%d\n", &r, &g, &b );
+	if( count == 3 )
+	{
+		RGBLed_SetManual(r,g,b);
+	}
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	SerialCommands_ReceiveMessage(&command_ctx, (const char*)rx_buff, 1);
+
+	HAL_UART_Receive_IT(&huart2, rx_buff, 1); //You need to toggle a breakpoint on this line!
 }
 /* USER CODE END 4 */
 
