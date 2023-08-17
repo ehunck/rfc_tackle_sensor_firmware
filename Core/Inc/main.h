@@ -60,10 +60,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define HOME_SELECT_Pin GPIO_PIN_7
+#define HOME_SELECT_GPIO_Port GPIOB
 #define TACKLE_STATUS_Pin GPIO_PIN_14
 #define TACKLE_STATUS_GPIO_Port GPIOC
-#define MODE_SELECT_Pin GPIO_PIN_15
-#define MODE_SELECT_GPIO_Port GPIOC
+#define ELIGIBLE_SELECT_Pin GPIO_PIN_15
+#define ELIGIBLE_SELECT_GPIO_Port GPIOC
 #define ACC_INT1_Pin GPIO_PIN_0
 #define ACC_INT1_GPIO_Port GPIOA
 #define SPI1_NSS_Pin GPIO_PIN_4

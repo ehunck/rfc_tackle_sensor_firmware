@@ -30,6 +30,8 @@
 #include "Accelerometer.h"
 #include "UserTimer.h"
 #include "SerialCommands.h"
+#include "Settings.h"
+#include "fw_version.h"
 #include <string.h>
 #include <stdio.h>
 /* USER CODE END Includes */
@@ -82,13 +84,41 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int Clamp( int val, int min, int max );
+
 void SetRGBValue(const char* msg, uint32_t msg_len);
-#define NUM_COMMANDS	1
+void GetAcceleration(const char* msg, uint32_t msg_len);
+void GetHomeAwayStatus(const char* msg, uint32_t msg_len);
+void GetEligibleStatus(const char* msg, uint32_t msg_len);
+void GetTackledStatus(const char* msg, uint32_t msg_len);
+void GetFirmwareVersion(const char* msg, uint32_t msg_len);
+
+#define NUM_COMMANDS	6
 const Command commands[NUM_COMMANDS] = {
     {
         .command_str = "rgb:",
         .command_func = SetRGBValue
-    }
+    },
+	{
+		.command_str = "accel",
+		.command_func = GetAcceleration
+	},
+	{
+		.command_str = "home",
+		.command_func = GetHomeAwayStatus
+	},
+	{
+		.command_str = "eligible",
+		.command_func = GetEligibleStatus
+	},
+	{
+		.command_str = "tackled",
+		.command_func = GetTackledStatus
+	},
+	{
+		.command_str = "version",
+		.command_func = GetFirmwareVersion
+	},
 };
 /* USER CODE END 0 */
 
@@ -123,15 +153,16 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
-//  MX_IWDG_Init();
+  MX_IWDG_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  printf("Robotic Football Tackle Sensor\r\n");
-  printf("Firmware v0.0.0\r\n");
-//  if( !Accelerometer_Init() )
-//  {
-//	  printf("Failed to initialize accelerometer.\r\n");
-//  }
+  printf("Robotic Football Tackle Sensor\n");
+  printf("Version: %d.%d.%d\n", FW_MAJOR_VER, FW_MINOR_VER, FW_PATCH_VER);
+  Settings_Init();
+  if( !Accelerometer_Init() )
+  {
+	  printf("Failed to initialize accelerometer.\n");
+  }
 
   RGBLed_Init();
   UserTimer_Init(&timer_ctx, 2000);
@@ -147,10 +178,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  HAL_IWDG_Refresh(&hiwdg);
-//	  Accelerometer_Update();
-//	  Accelerometer_GetData( &data );
-//	  printf( "%d,%d,%d\r\n", (int)data.x, (int)data.y, (int)data.z );
+	  HAL_IWDG_Refresh(&hiwdg);
+	  Accelerometer_Update();
+	  Accelerometer_GetData( &data );
+
 	  if( fabsf(data.x) > TACKLE_THRESHOLD
 		  || fabsf(data.y) > TACKLE_THRESHOLD )
 	  {
@@ -159,21 +190,34 @@ int main(void)
 
 	  bool is_tackled = UserTimer_GetActive(&timer_ctx);
 
-	  if(HAL_GPIO_ReadPin(MODE_SELECT_GPIO_Port, MODE_SELECT_Pin) == GPIO_PIN_RESET)
+	  if(HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_RESET)
 	  {
-//		  RGBLed_SetBlue();
+		  // Ineligible Receiver
+		  RGBLed_SetOff();
 		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 	  }
 	  else
 	  {
 		  if( is_tackled )
 		  {
-//			  RGBLed_SetRed();
+			  RGBLed_SetRed();
 			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 		  }
 		  else
 		  {
-//			  RGBLed_SetGreen();
+			  if(HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_SET)
+			  {
+				  // Home
+				  uint8_t r = Settings_GetHomeRed();
+				  uint8_t g = Settings_GetHomeGreen();
+				  uint8_t b = Settings_GetHomeBlue();
+				  RGBLed_SetManual(r, g, b);
+			  }
+			  else
+			  {
+				  // Away
+				  RGBLed_SetWhite();
+			  }
 			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 		  }
 	  }
@@ -450,15 +494,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : HOME_SELECT_Pin */
+  GPIO_InitStruct.Pin = HOME_SELECT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(HOME_SELECT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : TACKLE_STATUS_Pin */
   GPIO_InitStruct.Pin = TACKLE_STATUS_Pin;
@@ -467,11 +517,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(TACKLE_STATUS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MODE_SELECT_Pin */
-  GPIO_InitStruct.Pin = MODE_SELECT_Pin;
+  /*Configure GPIO pin : ELIGIBLE_SELECT_Pin */
+  GPIO_InitStruct.Pin = ELIGIBLE_SELECT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(MODE_SELECT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(ELIGIBLE_SELECT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ACC_INT1_Pin ACC_INT2_Pin */
   GPIO_InitStruct.Pin = ACC_INT1_Pin|ACC_INT2_Pin;
@@ -495,6 +545,19 @@ int __io_putchar(int ch)
 	return ch;
 }
 
+int Clamp( int val, int min, int max )
+{
+	if( val > max )
+	{
+		return max;
+	}
+	if( val < min )
+	{
+		return min;
+	}
+	return val;
+}
+
 // Parses Message received in the format <red>,<green>,<blue>
 void SetRGBValue(const char* msg, uint32_t msg_len)
 {
@@ -502,8 +565,41 @@ void SetRGBValue(const char* msg, uint32_t msg_len)
 	int count = sscanf(msg, "%d,%d,%d\n", &r, &g, &b );
 	if( count == 3 )
 	{
-		RGBLed_SetManual(r,g,b);
+		r = Clamp( r, 0, 255 );
+		g = Clamp( g, 0, 255 );
+		b = Clamp( b, 0, 255 );
+		Settings_SetHomeRedGreenBlue(r,g,b);
 	}
+}
+
+void GetAcceleration(const char* msg, uint32_t msg_len)
+{
+	Accelerometer_Data data = {0};
+	Accelerometer_GetData( &data );
+	printf( "accel:%d,%d,%d\n", (int)data.x, (int)data.y, (int)data.z );
+}
+
+void GetHomeAwayStatus(const char* msg, uint32_t msg_len)
+{
+	bool home = (HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_SET);
+	printf("home:%s\n", home ? "1" : "0");
+}
+
+void GetEligibleStatus(const char* msg, uint32_t msg_len)
+{
+	bool eligible = (HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_SET);
+	printf("eligible:%s\n", eligible ? "1" : "0");
+}
+
+void GetTackledStatus(const char* msg, uint32_t msg_len)
+{
+	bool is_tackled = UserTimer_GetActive(&timer_ctx);
+	printf("tackled:%s\n", is_tackled ? "1" : "0");
+}
+
+void GetFirmwareVersion(const char* msg, uint32_t msg_len)
+{
+	printf("version:%d.%d.%d\n", FW_MAJOR_VER, FW_MINOR_VER, FW_PATCH_VER );
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
