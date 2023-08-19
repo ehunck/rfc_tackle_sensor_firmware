@@ -53,7 +53,7 @@ static uint8_t whoamI = 0;
 
 bool Accelerometer_Init()
 {
-	// Todo: assume that the SPI peripheral is setup in the main application.
+	// Assume that the SPI peripheral is setup in the main application.
 
 	/* Check device ID */
 	lis2de12_device_id_get(&spi_interface, &whoamI);
@@ -87,11 +87,11 @@ void Accelerometer_Update()
 		memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
 		lis2de12_acceleration_raw_get(&spi_interface, data_raw_acceleration);
 		acceleration_mg[0] =
-				lis2de12_from_fs4_to_mg(data_raw_acceleration[0]);
+				lis2de12_from_fs8_to_mg(data_raw_acceleration[0]);
 		acceleration_mg[1] =
-				lis2de12_from_fs4_to_mg(data_raw_acceleration[1]);
+				lis2de12_from_fs8_to_mg(data_raw_acceleration[1]);
 		acceleration_mg[2] =
-				lis2de12_from_fs4_to_mg(data_raw_acceleration[2]);
+				lis2de12_from_fs8_to_mg(data_raw_acceleration[2]);
 	}
 
 	lis2de12_temp_data_ready_get(&spi_interface, &reg.byte);
