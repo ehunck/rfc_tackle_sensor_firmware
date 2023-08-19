@@ -96,7 +96,7 @@ void GetFirmwareVersion(const char* msg, uint32_t msg_len);
 #define NUM_COMMANDS	6
 const Command commands[NUM_COMMANDS] = {
     {
-        .command_str = "rgb:",
+        .command_str = "rgb",
         .command_func = SetRGBValue
     },
 	{
@@ -568,7 +568,7 @@ int Clamp( int val, int min, int max )
 void SetRGBValue(const char* msg, uint32_t msg_len)
 {
 	int r, g, b = 0;
-	int count = sscanf(msg, "%d,%d,%d\n", &r, &g, &b );
+	int count = sscanf(msg, ":%d,%d,%d\n", &r, &g, &b );
 	if( count == 3 )
 	{
 		r = Clamp( r, 0, 255 );
@@ -576,6 +576,7 @@ void SetRGBValue(const char* msg, uint32_t msg_len)
 		b = Clamp( b, 0, 255 );
 		Settings_SetHomeRedGreenBlue(r,g,b);
 	}
+	printf( "rgb:%d,%d,%d\n", Settings_GetHomeRed(), Settings_GetHomeGreen(), Settings_GetHomeBlue() );
 }
 
 void GetAcceleration(const char* msg, uint32_t msg_len)
