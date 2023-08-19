@@ -65,8 +65,8 @@ DMA_HandleTypeDef hdma_usart2_rx;
 /* USER CODE BEGIN PV */
 UserTimer timer_ctx = {0};
 SerialCommands command_ctx = {0};
-uint8_t rx_buff[1] = {0};
-
+uint8_t rx_buff[50] = {0};
+void uart_dma_transfer_complete(DMA_HandleTypeDef *_hdma);
 
 /* USER CODE END PV */
 
@@ -460,7 +460,13 @@ static void MX_USART2_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART2_Init 2 */
-  HAL_UART_Receive_IT(&huart2, rx_buff, 1);
+
+  HAL_DMA_RegisterCallback(&hdma_usart2_rx, HAL_DMA_XFER_CPLT_CB_ID, uart_dma_transfer_complete);
+
+  __HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_IDLEF);
+  __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
+
+  HAL_UART_Receive_DMA(&huart2, rx_buff, sizeof(rx_buff));
   /* USER CODE END USART2_Init 2 */
 
 }
@@ -602,12 +608,22 @@ void GetFirmwareVersion(const char* msg, uint32_t msg_len)
 	printf("version:%d.%d.%d\n", FW_MAJOR_VER, FW_MINOR_VER, FW_PATCH_VER );
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void uart_dma_transfer_complete(DMA_HandleTypeDef *_hdma)
 {
-	SerialCommands_ReceiveMessage(&command_ctx, (const char*)rx_buff, 1);
-
-	HAL_UART_Receive_IT(&huart2, rx_buff, 1); //You need to toggle a breakpoint on this line!
+	uint32_t data_size = sizeof(rx_buff) - __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
+	if( data_size > 0 )
+	{
+		SerialCommands_ReceiveMessage(&command_ctx, (const char*)rx_buff, data_size);
+	}
+	HAL_UART_AbortReceive(&huart2);
+	HAL_UART_Receive_DMA(&huart2, rx_buff, sizeof(rx_buff));
 }
+
+void UART2IdleCallback()
+{
+	uart_dma_transfer_complete(&hdma_usart2_rx);
+}
+
 /* USER CODE END 4 */
 
 /**

@@ -61,6 +61,8 @@ extern DMA_HandleTypeDef hdma_usart2_rx;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 
+void UART2IdleCallback();
+
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -175,6 +177,15 @@ void DMA1_Channel2_3_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
+
+	/* Check for IDLE line interrupt */
+	if(__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_IDLE )
+			&& __HAL_UART_GET_IT(&huart2, UART_IT_IDLE))
+	{
+		__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_IDLEF);
+		// Check for data to process
+		UART2IdleCallback();
+	}
 
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
