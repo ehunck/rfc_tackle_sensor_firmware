@@ -2,6 +2,11 @@
 #define __EEPROM_H
 
 /*
+ * 8-20-2023:
+ * Modified by Eddie Hunckler for use with STM32G031F6 plus bug fixes.
+ */
+
+/*
   Author:     Nima Askari
   WebSite:    http://www.github.com/NimaLTD
   Instagram:  http://instagram.com/github.NimaLTD
