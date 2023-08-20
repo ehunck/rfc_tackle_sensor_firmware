@@ -52,6 +52,13 @@ bool SerialCommands_ReceiveMessage(SerialCommands* ctx, const char* msg, uint8_t
     if( (ctx->buffer_index + msg_len) > BUFFER_SIZE)
     {
         ResetBuffer(ctx);
+
+        // If the message length is too big to fit in the buffer.
+        if( msg_len > BUFFER_SIZE )
+        {
+        	// Clamp it.
+        	msg_len = BUFFER_SIZE;
+        }
     }
     // Copy into buffer
     for( int i = 0; i < msg_len; i ++ )

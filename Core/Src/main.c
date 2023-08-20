@@ -43,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TACKLE_THRESHOLD 1450.0f // mg
+#define TACKLE_THRESHOLD 3000.0f // mg
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
