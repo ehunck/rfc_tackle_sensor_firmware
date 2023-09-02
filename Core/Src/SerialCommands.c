@@ -77,6 +77,12 @@ bool SerialCommands_Process(SerialCommands* ctx)
         return false;
     }
 
+    // If there's no data in the buffer, we can return now
+    if( ctx->buffer_index == 0 )
+    {
+        return false;
+    }
+
     // Check if delimiter is in buffer
     char* delimiter_ptr = strstr(ctx->buffer, ctx->delimiter);
     if(delimiter_ptr == NULL)
