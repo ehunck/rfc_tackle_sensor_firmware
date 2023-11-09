@@ -65,18 +65,17 @@ bool Accelerometer_Init()
 
 	/* Enable Block Data Update */
 	lis2de12_block_data_update_set(&spi_interface, PROPERTY_ENABLE);
-	/* Set Output Data Rate to 1Hz */
-	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_200Hz);
+	/* Set Output Data Rate to 100Hz */
+	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_100Hz);
 	/* Set full scale to 2g */
 	lis2de12_full_scale_set(&spi_interface, LIS2DE12_8g);
-	/* Enable temperature sensor */
-	lis2de12_temperature_meas_set(&spi_interface, LIS2DE12_TEMP_ENABLE);
 
 	return true;
 }
 
-void Accelerometer_Update()
+bool Accelerometer_Update()
 {
+	bool updated = false;
 	lis2de12_reg_t reg;
 	/* Read output only if new value available */
 	lis2de12_xl_data_ready_get(&spi_interface, &reg.byte);
@@ -92,19 +91,10 @@ void Accelerometer_Update()
 				lis2de12_from_fs8_to_mg(data_raw_acceleration[1]);
 		acceleration_mg[2] =
 				lis2de12_from_fs8_to_mg(data_raw_acceleration[2]);
+
+		updated = true;
 	}
-
-	lis2de12_temp_data_ready_get(&spi_interface, &reg.byte);
-
-	if (reg.byte)
-	{
-		/* Read temperature data */
-		memset(&data_raw_temperature, 0x00, sizeof(int16_t));
-		lis2de12_temperature_raw_get(&spi_interface, &data_raw_temperature);
-		temperature_degC =
-		lis2de12_from_lsb_to_celsius(data_raw_temperature);
-
-	}
+	return updated;
 }
 
 bool Accelerometer_GetData( Accelerometer_Data *data )

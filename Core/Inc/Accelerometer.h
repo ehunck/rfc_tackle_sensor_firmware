@@ -26,7 +26,7 @@ typedef struct
 } Accelerometer_Data;
 
 bool Accelerometer_Init();
-void Accelerometer_Update();
+bool Accelerometer_Update();
 
 bool Accelerometer_GetData( Accelerometer_Data *data );
 bool Accelerometer_GetRawData( Accelerometer_RawData *data );

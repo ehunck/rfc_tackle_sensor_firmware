@@ -188,20 +188,28 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  HAL_IWDG_Refresh(&hiwdg);
-	  Accelerometer_Update();
-	  Accelerometer_GetData( &data );
-
-	  // Update MinMaxTracker
-	  MinMaxTracker_Update(&accel_x_min_max, data.x);
-	  MinMaxTracker_Update(&accel_y_min_max, data.y);
-
-	  const float mag_data_x = fabsf(data.x);
-	  const float mag_data_y = fabsf(data.y);
-
-	  if( mag_data_x > TACKLE_THRESHOLD
-		  || mag_data_y > TACKLE_THRESHOLD )
+	  if( Accelerometer_Update() )
 	  {
-		  UserTimer_Start(&timer_ctx);
+		  // New Data
+
+		  // Pulse DBG_IO
+			HAL_GPIO_WritePin(GPIOA, DBG_IO_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, DBG_IO_Pin, GPIO_PIN_RESET);
+
+			Accelerometer_GetData( &data );
+
+			// Update MinMaxTracker
+			MinMaxTracker_Update(&accel_x_min_max, data.x);
+			MinMaxTracker_Update(&accel_y_min_max, data.y);
+
+			const float mag_data_x = fabsf(data.x);
+			const float mag_data_y = fabsf(data.y);
+
+			if( mag_data_x > TACKLE_THRESHOLD
+			  || mag_data_y > TACKLE_THRESHOLD )
+			{
+			  UserTimer_Start(&timer_ctx);
+			}
 	  }
 
 	  bool is_tackled = UserTimer_GetActive(&timer_ctx);
@@ -524,7 +532,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SPI1_NSS_Pin|DBG_IO_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : HOME_SELECT_Pin */
   GPIO_InitStruct.Pin = HOME_SELECT_Pin;
@@ -551,12 +559,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SPI1_NSS_Pin */
-  GPIO_InitStruct.Pin = SPI1_NSS_Pin;
+  /*Configure GPIO pins : SPI1_NSS_Pin DBG_IO_Pin */
+  GPIO_InitStruct.Pin = SPI1_NSS_Pin|DBG_IO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SPI1_NSS_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
