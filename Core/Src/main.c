@@ -34,6 +34,7 @@
 #include "fw_version.h"
 #include <string.h>
 #include <stdio.h>
+#include "MinMaxTracker.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,7 +68,8 @@ UserTimer timer_ctx = {0};
 SerialCommands command_ctx = {0};
 uint8_t rx_buff[50] = {0};
 void uart_dma_transfer_complete(DMA_HandleTypeDef *_hdma);
-
+MinMaxTracker accel_x_min_max = {0};
+MinMaxTracker accel_y_min_max = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,35 +90,40 @@ int Clamp( int val, int min, int max );
 
 void SetRGBValue(const char* msg, uint32_t msg_len);
 void GetAcceleration(const char* msg, uint32_t msg_len);
+void GetAccelMagRange(const char* msg, uint32_t msglen);
 void GetHomeAwayStatus(const char* msg, uint32_t msg_len);
 void GetEligibleStatus(const char* msg, uint32_t msg_len);
 void GetTackledStatus(const char* msg, uint32_t msg_len);
 void GetFirmwareVersion(const char* msg, uint32_t msg_len);
 
-#define NUM_COMMANDS	6
+#define NUM_COMMANDS	7
 const Command commands[NUM_COMMANDS] = {
     {
-        .command_str = "rgb",
+        .command_str = "l",
         .command_func = SetRGBValue
     },
 	{
-		.command_str = "accel",
+		.command_str = "a",
 		.command_func = GetAcceleration
 	},
 	{
-		.command_str = "home",
+		.command_str = "r",
+		.command_func = GetAccelMagRange
+	},
+	{
+		.command_str = "h",
 		.command_func = GetHomeAwayStatus
 	},
 	{
-		.command_str = "eligible",
+		.command_str = "e",
 		.command_func = GetEligibleStatus
 	},
 	{
-		.command_str = "tackled",
+		.command_str = "t",
 		.command_func = GetTackledStatus
 	},
 	{
-		.command_str = "version",
+		.command_str = "v",
 		.command_func = GetFirmwareVersion
 	},
 };
@@ -138,6 +145,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  MinMaxTracker_Reset(&accel_x_min_max);
+  MinMaxTracker_Reset(&accel_y_min_max);
 
   /* USER CODE END Init */
 
@@ -182,8 +191,15 @@ int main(void)
 	  Accelerometer_Update();
 	  Accelerometer_GetData( &data );
 
-	  if( fabsf(data.x) > TACKLE_THRESHOLD
-		  || fabsf(data.y) > TACKLE_THRESHOLD )
+	  // Update MinMaxTracker
+	  MinMaxTracker_Update(&accel_x_min_max, data.x);
+	  MinMaxTracker_Update(&accel_y_min_max, data.y);
+
+	  const float mag_data_x = fabsf(data.x);
+	  const float mag_data_y = fabsf(data.y);
+
+	  if( mag_data_x > TACKLE_THRESHOLD
+		  || mag_data_y > TACKLE_THRESHOLD )
 	  {
 		  UserTimer_Start(&timer_ctx);
 	  }
@@ -576,37 +592,50 @@ void SetRGBValue(const char* msg, uint32_t msg_len)
 		b = Clamp( b, 0, 255 );
 		Settings_SetHomeRedGreenBlue(r,g,b);
 	}
-	printf( "rgb:%d,%d,%d\n", Settings_GetHomeRed(), Settings_GetHomeGreen(), Settings_GetHomeBlue() );
+	printf( "l:%d,%d,%d\n", Settings_GetHomeRed(), Settings_GetHomeGreen(), Settings_GetHomeBlue() );
 }
 
 void GetAcceleration(const char* msg, uint32_t msg_len)
 {
 	Accelerometer_Data data = {0};
 	Accelerometer_GetData( &data );
-	printf( "accel:%d,%d,%d\n", (int)data.x, (int)data.y, (int)data.z );
+	printf( "a:%d,%d,%d\n", (int)data.x, (int)data.y, (int)data.z );
+}
+
+void GetAccelMagRange(const char* msg, uint32_t msg_len)
+{
+	// Grab the min and max since the last update
+	int xmin = (int)MinMaxTracker_getMin(&accel_x_min_max);
+	int xmax = (int)MinMaxTracker_getMax(&accel_x_min_max);
+	int ymin = (int)MinMaxTracker_getMin(&accel_y_min_max);
+	int ymax = (int)MinMaxTracker_getMax(&accel_y_min_max);
+	// Reset
+	MinMaxTracker_Reset(&accel_x_min_max);
+	MinMaxTracker_Reset(&accel_y_min_max);
+	printf( "r:%d,%d,%d,%d\n", xmin, xmax, ymin, ymax);
 }
 
 void GetHomeAwayStatus(const char* msg, uint32_t msg_len)
 {
 	bool home = (HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_SET);
-	printf("home:%s\n", home ? "1" : "0");
+	printf("h:%s\n", home ? "1" : "0");
 }
 
 void GetEligibleStatus(const char* msg, uint32_t msg_len)
 {
 	bool eligible = (HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_SET);
-	printf("eligible:%s\n", eligible ? "1" : "0");
+	printf("e:%s\n", eligible ? "1" : "0");
 }
 
 void GetTackledStatus(const char* msg, uint32_t msg_len)
 {
 	bool is_tackled = UserTimer_GetActive(&timer_ctx);
-	printf("tackled:%s\n", is_tackled ? "1" : "0");
+	printf("t:%s\n", is_tackled ? "1" : "0");
 }
 
 void GetFirmwareVersion(const char* msg, uint32_t msg_len)
 {
-	printf("version:%d.%d.%d\n", FW_MAJOR_VER, FW_MINOR_VER, FW_PATCH_VER );
+	printf("v:%d.%d.%d\n", FW_MAJOR_VER, FW_MINOR_VER, FW_PATCH_VER );
 }
 
 void uart_dma_transfer_complete(DMA_HandleTypeDef *_hdma)

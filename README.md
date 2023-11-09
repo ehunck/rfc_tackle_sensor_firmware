@@ -40,11 +40,12 @@ Open a git bash terminal in the directory of your choosing and call the followin
 
 | Command | Name              | Description                     | Example Command |  Example Response |
 | ------- | ----------------- | ------------------------------- | --------------- | ----------------- |
-| `rgb`   | Set/Get RGB Value       | Sets the RGB value for the LEDs on the tackled sensor for the Home color when the unit is eligible and not tackled. | `rgb:0,255,0\n` | `rgb:0,255,0\n` |
-| `accel` | Get Acceleration   | Retrieves the acceleration value from the sensor.  This is primarily for diagnostics.  This will not be able to be polled fast enough to monitor all of the tackle values. | `accel\n` | `accel:0,0,1000\n` |
-| `home` | Get Home/Away Status  | Retrieves the home or away status. This indicates whether the robotic football player is designated as a "home" or "away" team member, which dictates whether it will display it's "home" color or "away" color when the unit is eligible and not tackled. | `home\n` | `home:1\n`|
-| `eligible` | Get Eligible Status | Retrieves the eligibility status. This could indicate if the robot is eligible to be tackled or play at any given moment and is reflected in the LED status being OFF. | `eligible\n` | `eligible:1\n` |
-| `tackled` | Get Tackled Status | Retrieves the tackled status. This indicates if the robot is currently in the tackled state. | `tackled\n` | `tackled:0\n` |
-| `version` | Get Firmware Version | Retrieves the firmware version of the tackled sensor device. Useful for diagnostics or ensuring compatibility. | `version\n` | `version:0.1.0\n` |
+| `l`   | Set/Get RGB Value       | Sets the RGB value for the LEDs on the tackled sensor for the Home color when the unit is eligible and not tackled. | `l:0,255,0\n` | `l:0,255,0\n` |
+| `a` | Get Acceleration   | Retrieves the acceleration value from the sensor.  This is primarily for diagnostics.  This will not be able to be polled fast enough to monitor all of the tackle values. | `a\n` | `a:0,0,1000\n` |
+| `r` | Get AccelerationRange   | Retrieves the acceleration range that the sensor traversed since the last reported value. This is primarily for diagnostics.  This will not be able to be polled fast enough to monitor all of the tackle values. `r:xmin,xmax,ymin,ymax\r` | `r\n` | `r:100,200,100,200\n` |
+| `h` | Get Home/Away Status  | Retrieves the home or away status. This indicates whether the robotic football player is designated as a "home" or "away" team member, which dictates whether it will display it's "home" color or "away" color when the unit is eligible and not tackled. | `h\n` | `h:1\n`|
+| `e` | Get Eligible Status | Retrieves the eligibility status. This could indicate if the robot is eligible to be tackled or play at any given moment and is reflected in the LED status being OFF. | `e\n` | `e:1\n` |
+| `t` | Get Tackled Status | Retrieves the tackled status. This indicates if the robot is currently in the tackled state. | `t\n` | `t:0\n` |
+| `v` | Get Firmware Version | Retrieves the firmware version of the tackled sensor device. Useful for diagnostics or ensuring compatibility. | `v\n` | `v:0.1.0\n` |
 
 An example web-serial utility implementing this protocol can be found here: https://ehunck.github.io/tackle-sensor-utility/
