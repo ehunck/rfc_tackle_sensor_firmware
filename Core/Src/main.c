@@ -45,7 +45,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TACKLE_THRESHOLD 3000.0f // mg
+#define TACKLE_THRESHOLD 3800.0f // mg
 const float accel_filter_alpha = 0.80f;
 /* USER CODE END PD */
 
@@ -617,13 +617,13 @@ void GetAccelMagRange(const char* msg, uint32_t msg_len)
 
 void GetHomeAwayStatus(const char* msg, uint32_t msg_len)
 {
-	bool home = (HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_SET);
+	bool home = (HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_RESET);
 	printf("h:%s\n", home ? "1" : "0");
 }
 
 void GetEligibleStatus(const char* msg, uint32_t msg_len)
 {
-	bool eligible = (HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_SET);
+	bool eligible = (HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_RESET);
 	printf("e:%s\n", eligible ? "1" : "0");
 }
 
