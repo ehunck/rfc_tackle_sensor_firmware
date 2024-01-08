@@ -35,6 +35,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "MinMaxTracker.h"
+#include "Utilities.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,6 +46,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define TACKLE_THRESHOLD 3000.0f // mg
+const float accel_filter_alpha = 0.80f;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -86,7 +88,7 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int Clamp( int val, int min, int max );
+
 
 void SetRGBValue(const char* msg, uint32_t msg_len);
 void GetAcceleration(const char* msg, uint32_t msg_len);
@@ -182,6 +184,8 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   Accelerometer_Data data = {0};
+  float smoothed_data_x = 0;
+  float smoothed_data_y = 0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -198,15 +202,16 @@ int main(void)
 
 			Accelerometer_GetData( &data );
 
+			// Run raw readings through IIRFilter
+			smoothed_data_x = IIRFilter( data.x/8000.0f, smoothed_data_x/8000.0f, accel_filter_alpha)*8000.0f;
+			smoothed_data_y = IIRFilter( data.y/8000.0f, smoothed_data_y/8000.0f, accel_filter_alpha)*8000.0f;
+
 			// Update MinMaxTracker
-			MinMaxTracker_Update(&accel_x_min_max, data.x);
-			MinMaxTracker_Update(&accel_y_min_max, data.y);
+			MinMaxTracker_Update(&accel_x_min_max, smoothed_data_x);
+			MinMaxTracker_Update(&accel_y_min_max, smoothed_data_y);
 
-			const float mag_data_x = fabsf(data.x);
-			const float mag_data_y = fabsf(data.y);
-
-			if( mag_data_x > TACKLE_THRESHOLD
-			  || mag_data_y > TACKLE_THRESHOLD )
+			if( fabsf(smoothed_data_x) > TACKLE_THRESHOLD
+			  || fabsf(smoothed_data_y) > TACKLE_THRESHOLD )
 			{
 			  UserTimer_Start(&timer_ctx);
 			}
@@ -214,7 +219,7 @@ int main(void)
 
 	  bool is_tackled = UserTimer_GetActive(&timer_ctx);
 
-	  if(HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_RESET)
+	  if(HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_SET)
 	  {
 		  // Ineligible Receiver
 		  RGBLed_SetOff();
@@ -229,7 +234,7 @@ int main(void)
 		  }
 		  else
 		  {
-			  if(HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_SET)
+			  if(HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_RESET)
 			  {
 				  // Home
 				  uint8_t r = Settings_GetHomeRed();
@@ -573,19 +578,6 @@ int __io_putchar(int ch)
 {
 	HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
 	return ch;
-}
-
-int Clamp( int val, int min, int max )
-{
-	if( val > max )
-	{
-		return max;
-	}
-	if( val < min )
-	{
-		return min;
-	}
-	return val;
 }
 
 // Parses Message received in the format <red>,<green>,<blue>

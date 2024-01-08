@@ -46,9 +46,7 @@ stmdev_ctx_t spi_interface = {
 };
 
 static int16_t data_raw_acceleration[3] = {0};
-static int16_t data_raw_temperature = 0;
 static float acceleration_mg[3] = {0};
-static float temperature_degC = 0;
 static uint8_t whoamI = 0;
 
 bool Accelerometer_Init()
@@ -67,7 +65,7 @@ bool Accelerometer_Init()
 	lis2de12_block_data_update_set(&spi_interface, PROPERTY_ENABLE);
 	/* Set Output Data Rate to 100Hz */
 	lis2de12_data_rate_set(&spi_interface, LIS2DE12_ODR_100Hz);
-	/* Set full scale to 2g */
+	/* Set full scale to 8g */
 	lis2de12_full_scale_set(&spi_interface, LIS2DE12_8g);
 
 	return true;
