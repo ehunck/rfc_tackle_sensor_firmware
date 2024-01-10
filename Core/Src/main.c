@@ -45,7 +45,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TACKLE_THRESHOLD 3800.0f // mg
+#define TACKLE_THRESHOLD 2500.0f // mg
 const float accel_filter_alpha = 0.80f;
 /* USER CODE END PD */
 
