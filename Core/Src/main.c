@@ -60,6 +60,7 @@ IWDG_HandleTypeDef hiwdg;
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim16;
 
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_tx;
@@ -82,6 +83,7 @@ static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_IWDG_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -166,6 +168,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_IWDG_Init();
   MX_TIM1_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
   printf("Robotic Football Tackle Sensor\n");
   printf("Version: %d.%d.%d\n", FW_MAJOR_VER, FW_MINOR_VER, FW_PATCH_VER);
@@ -218,14 +221,28 @@ int main(void)
 	  if(HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_SET)
 	  {
 		  // Ineligible Receiver
-		  RGBLed_SetOff();
+		  RGBLed_EnablePulse();
+		  if(HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_RESET)
+		  {
+			  // Home
+			  uint8_t r = Settings_GetHomeRed();
+			  uint8_t g = Settings_GetHomeGreen();
+			  uint8_t b = Settings_GetHomeBlue();
+			  RGBLed_SetManual(r, g, b, false);
+		  }
+		  else
+		  {
+			  // Away
+			  RGBLed_SetWhite(false);
+		  }
 		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 	  }
 	  else
 	  {
+		  RGBLed_DisablePulse();
 		  if( is_tackled )
 		  {
-			  RGBLed_SetRed();
+			  RGBLed_SetRed(true);
 			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 		  }
 		  else
@@ -236,12 +253,12 @@ int main(void)
 				  uint8_t r = Settings_GetHomeRed();
 				  uint8_t g = Settings_GetHomeGreen();
 				  uint8_t b = Settings_GetHomeBlue();
-				  RGBLed_SetManual(r, g, b);
+				  RGBLed_SetManual(r, g, b, true);
 			  }
 			  else
 			  {
 				  // Away
-				  RGBLed_SetWhite();
+				  RGBLed_SetWhite(true);
 			  }
 			  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 		  }
@@ -451,6 +468,39 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
+
+}
+
+/**
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM16_Init(void)
+{
+
+  /* USER CODE BEGIN TIM16_Init 0 */
+
+  /* USER CODE END TIM16_Init 0 */
+
+  /* USER CODE BEGIN TIM16_Init 1 */
+
+  /* USER CODE END TIM16_Init 1 */
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 64000;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 50;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM16_Init 2 */
+  HAL_TIM_Base_Start_IT(&htim16);
+
+  /* USER CODE END TIM16_Init 2 */
 
 }
 
