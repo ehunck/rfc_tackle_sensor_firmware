@@ -52,6 +52,8 @@ static uint8_t whoamI = 0;
 bool Accelerometer_Init()
 {
 	// Assume that the SPI peripheral is setup in the main application.
+	// Force the Reset line low the Accelerometer
+	HAL_GPIO_WritePin(GPIOA, SPI_RESET_Pin, GPIO_PIN_RESET);
 
 	/* Check device ID */
 	lis2de12_device_id_get(&spi_interface, &whoamI);

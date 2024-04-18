@@ -196,10 +196,6 @@ int main(void)
 	  {
 		  // New Data
 
-		  // Pulse DBG_IO
-			HAL_GPIO_WritePin(GPIOA, DBG_IO_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOA, DBG_IO_Pin, GPIO_PIN_RESET);
-
 			Accelerometer_GetData( &data );
 
 			// Run raw readings through IIRFilter
@@ -537,7 +533,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SPI1_NSS_Pin|DBG_IO_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SPI1_NSS_Pin|SPI_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : HOME_SELECT_Pin */
   GPIO_InitStruct.Pin = HOME_SELECT_Pin;
@@ -564,8 +560,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SPI1_NSS_Pin DBG_IO_Pin */
-  GPIO_InitStruct.Pin = SPI1_NSS_Pin|DBG_IO_Pin;
+  /*Configure GPIO pins : SPI1_NSS_Pin SPI_RESET_Pin */
+  GPIO_InitStruct.Pin = SPI1_NSS_Pin|SPI_RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
