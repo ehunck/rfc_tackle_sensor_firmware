@@ -9,21 +9,17 @@
 #define INC_RGBLED_H_
 
 #include <stdint.h>
-#include <stdbool.h>
 
 void RGBLed_Init();
-void RGBLed_SetManual(uint8_t r, uint8_t g, uint8_t b, bool refresh);
+void RGBLed_SetManual(uint8_t r, uint8_t g, uint8_t b);
 
-void RGBLed_SetRed(bool refresh);
-void RGBLed_SetGreen(bool refresh);
-void RGBLed_SetBlue(bool refresh);
-void RGBLed_SetWhite(bool refresh);
-
+void RGBLed_SetRed();
+void RGBLed_SetGreen();
+void RGBLed_SetBlue();
+void RGBLed_SetYellow();
+void RGBLed_SetCyan();
+void RGBLed_SetMagenta();
+void RGBLed_SetWhite();
 void RGBLed_SetOff();
-
-void RGBLed_EnablePulse();
-void RGBLed_DisablePulse();
-
-void RGBLed_IRQUpdate();
 
 #endif /* INC_RGBLED_H_ */
