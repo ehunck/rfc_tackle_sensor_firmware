@@ -6,6 +6,7 @@
  */
 
 #include "UserTimer.h"
+#include "stm32g0xx_hal.h"
 
 void UserTimer_Init(UserTimer* ctx, uint32_t interval_ms)
 {
