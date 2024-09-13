@@ -4,7 +4,7 @@
 
 Open a git bash terminal in the directory of your choosing and call the following command:
 
-`git clone https://github.com/ehunck/rfc_tackle_sensor_firmware`
+`git clone https://github.com/Collegiate-Robotic-Football-Conference/tackle-sensor-firmware.git`
 
 ## Building and Developing in STM32CubeIDE
 
@@ -48,4 +48,4 @@ Open a git bash terminal in the directory of your choosing and call the followin
 | `t` | Get Tackled Status | Retrieves the tackled status. This indicates if the robot is currently in the tackled state. | `t\n` | `t:0\n` |
 | `v` | Get Firmware Version | Retrieves the firmware version of the tackled sensor device. Useful for diagnostics or ensuring compatibility. | `v\n` | `v:0.1.0\n` |
 
-An example web-serial utility implementing this protocol can be found here: https://ehunck.github.io/tackle-sensor-utility/
+An example web-serial utility implementing this protocol can be found here: https://collegiate-robotic-football-conference.github.io/tackle-sensor-utility/
