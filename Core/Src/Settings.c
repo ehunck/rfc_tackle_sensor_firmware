@@ -9,7 +9,7 @@
 #include "ee.h"
 
 #define VIRTAUL_ADDR_RGB	0
-#define DATA_SET_MAGIC		0xAA
+#define DATA_SET_MAGIC		0xAB
 
 typedef struct __attribute__((__packed__))
 {
@@ -17,7 +17,7 @@ typedef struct __attribute__((__packed__))
 	uint8_t red;
 	uint8_t green;
 	uint8_t blue;
-
+	uint8_t fade;
 } RGBData;
 
 static RGBData _data;
@@ -33,12 +33,12 @@ void Settings_Init()
 			_data.red = 0;
 			_data.green = 255;
 			_data.blue = 0;
+			_data.fade = 0;
 			_data.set = DATA_SET_MAGIC;
 			ee_format(false);
 			ee_write(VIRTAUL_ADDR_RGB, sizeof(_data), (uint8_t*)&_data );
 		}
 	}
-
 }
 
 void Settings_SetHomeRedGreenBlue(uint8_t r, uint8_t g, uint8_t b)
@@ -67,6 +67,22 @@ void Settings_SetHomeRedGreenBlue(uint8_t r, uint8_t g, uint8_t b)
 	}
 }
 
+void Settings_SetFade(uint8_t fade_enable)
+{
+	bool save_needed = false;
+	if( _data.fade != fade_enable )
+	{
+		_data.fade = fade_enable;
+		save_needed = true;
+	}
+	if( save_needed )
+	{
+		_data.set = DATA_SET_MAGIC;
+		ee_format(false);
+		ee_write(VIRTAUL_ADDR_RGB, sizeof(_data), (uint8_t*)&_data );
+	}
+}
+
 uint8_t Settings_GetHomeRed()
 {
 	return _data.red;
@@ -81,3 +97,9 @@ uint8_t Settings_GetHomeBlue()
 {
 	return _data.blue;
 }
+
+uint8_t Settings_GetFade()
+{
+	return _data.fade;
+}
+

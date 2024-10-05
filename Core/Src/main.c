@@ -45,7 +45,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TACKLE_THRESHOLD 2500.0f // mg
+#define TACKLE_THRESHOLD 5000.0f // mg
 const float accel_filter_alpha = 0.80f;
 /* USER CODE END PD */
 
@@ -93,6 +93,7 @@ static void MX_TIM16_Init(void);
 
 
 void SetRGBValue(const char* msg, uint32_t msg_len);
+void SetFadeEnable(const char* msg, uint32_t msg_len);
 void GetAcceleration(const char* msg, uint32_t msg_len);
 void GetAccelMagRange(const char* msg, uint32_t msglen);
 void GetHomeAwayStatus(const char* msg, uint32_t msg_len);
@@ -100,12 +101,16 @@ void GetEligibleStatus(const char* msg, uint32_t msg_len);
 void GetTackledStatus(const char* msg, uint32_t msg_len);
 void GetFirmwareVersion(const char* msg, uint32_t msg_len);
 
-#define NUM_COMMANDS	7
+#define NUM_COMMANDS	8
 const Command commands[NUM_COMMANDS] = {
     {
         .command_str = "l",
         .command_func = SetRGBValue
     },
+	{
+		.command_str = "f",
+		.command_func = SetFadeEnable
+	},
 	{
 		.command_str = "a",
 		.command_func = GetAcceleration
@@ -220,25 +225,36 @@ int main(void)
 
 	  if(HAL_GPIO_ReadPin(ELIGIBLE_SELECT_GPIO_Port, ELIGIBLE_SELECT_Pin) == GPIO_PIN_SET)
 	  {
-		  // Ineligible Receiver
-		  RGBLed_EnablePulse();
-		  if(HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_RESET)
+		  // In-eligible Receiver
+		  if( Settings_GetFade() )
 		  {
-			  // Home
-			  uint8_t r = Settings_GetHomeRed();
-			  uint8_t g = Settings_GetHomeGreen();
-			  uint8_t b = Settings_GetHomeBlue();
-			  RGBLed_SetManual(r, g, b, false);
+			  // Fade Mode
+			  RGBLed_EnablePulse();
+			  if(HAL_GPIO_ReadPin(HOME_SELECT_GPIO_Port, HOME_SELECT_Pin) == GPIO_PIN_RESET)
+			  {
+				  // Home
+				  uint8_t r = Settings_GetHomeRed();
+				  uint8_t g = Settings_GetHomeGreen();
+				  uint8_t b = Settings_GetHomeBlue();
+				  RGBLed_SetManual(r, g, b, false);
+			  }
+			  else
+			  {
+				  // Away
+				  RGBLed_SetWhite(false);
+			  }
 		  }
 		  else
 		  {
-			  // Away
-			  RGBLed_SetWhite(false);
+			  // Off Mode
+			  RGBLed_DisablePulse();
+			  RGBLed_SetOff();
 		  }
 		  HAL_GPIO_WritePin(TACKLE_STATUS_GPIO_Port, TACKLE_STATUS_Pin, GPIO_PIN_SET);
 	  }
 	  else
 	  {
+		  // Eligible Receiver
 		  RGBLed_DisablePulse();
 		  if( is_tackled )
 		  {
@@ -639,6 +655,19 @@ void SetRGBValue(const char* msg, uint32_t msg_len)
 		Settings_SetHomeRedGreenBlue(r,g,b);
 	}
 	printf( "l:%d,%d,%d\n", Settings_GetHomeRed(), Settings_GetHomeGreen(), Settings_GetHomeBlue() );
+}
+
+// Parses Message received in the format <fade_enable>
+void SetFadeEnable(const char* msg, uint32_t msg_len)
+{
+	int fade = 0;
+	int count = sscanf(msg, ":%d\n", &fade );
+	if( count == 1 )
+	{
+		fade = Clamp( fade, 0, 1 );
+		Settings_SetFade( fade );
+	}
+	printf( "f:%d\n", Settings_GetFade() );
 }
 
 void GetAcceleration(const char* msg, uint32_t msg_len)

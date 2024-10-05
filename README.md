@@ -41,6 +41,7 @@ Open a git bash terminal in the directory of your choosing and call the followin
 | Command | Name              | Description                     | Example Command |  Example Response |
 | ------- | ----------------- | ------------------------------- | --------------- | ----------------- |
 | `l`   | Set/Get RGB Value       | Sets the RGB value for the LEDs on the tackled sensor for the Home color when the unit is eligible and not tackled. | `l:0,255,0\n` | `l:0,255,0\n` |
+| `f`   | Set/Get Fade Enabled       | Sets the fade enabled status. 1: Sets the Ineligible LED mode to fading. 0: Sets the Ineligible LED mode to off. | `f:1\n` | `f:1\n` |
 | `a` | Get Acceleration   | Retrieves the acceleration value from the sensor.  This is primarily for diagnostics.  This will not be able to be polled fast enough to monitor all of the tackle values. | `a\n` | `a:0,0,1000\n` |
 | `r` | Get AccelerationRange   | Retrieves the acceleration range that the sensor traversed since the last reported value. This is primarily for diagnostics.  This will not be able to be polled fast enough to monitor all of the tackle values. `r:xmin,xmax,ymin,ymax\r` | `r\n` | `r:100,200,100,200\n` |
 | `h` | Get Home/Away Status  | Retrieves the home or away status. This indicates whether the robotic football player is designated as a "home" or "away" team member, which dictates whether it will display it's "home" color or "away" color when the unit is eligible and not tackled. | `h\n` | `h:1\n`|
